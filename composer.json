@@ -1,0 +1,19 @@
+{
+    "name": "zdz/yunxin-php",
+    "description": "php sdk for NetEase YunXin",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "zdz",
+            "email": "zdzserver@163.com"
+        }
+    ],
+    "require": {
+        "guzzlehttp/guzzle": "*"
+    },
+    "autoload":{
+        "psr-4": {
+            "YunXin\\": "src/"
+        }
+    }
+}
