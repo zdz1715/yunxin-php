@@ -28,6 +28,7 @@ class Chat extends Base
     const RECALL_TYPE_ONE_TO_GROUP = 8;
 
 
+
     /**
      * 发送消息
      * @param $from
@@ -35,19 +36,7 @@ class Chat extends Base
      * @param $ope
      * @param $type
      * @param $body
-     * @param bool $antiSpam
-     * @param array $antiSpamCustom
-     * @param array $option
-     * @param string $pushContent
-     * @param array $payload
-     * @param array $ext
-     * @param array $forcePushList
-     * @param string $forcePushContent
-     * @param bool $forcePushAll
-     * @param string $bid
-     * @param null $useYiDun
-     * @param int $markRead
-     * @param bool $checkFriend
+     * @param array $notRequireParams
      * @return mixed
      * @throws YunXinArgExcetption
      * @throws YunXinBusinessException
@@ -60,20 +49,7 @@ class Chat extends Base
                              $ope,
                              $type,
                              $body,
-                             $antiSpam = false,
-                             $antiSpamCustom = [],
-                             $option = '',
-                             $pushContent = '',
-                             $payload = '',
-                             $ext = [],
-                             $forcePushList = [],
-                             $forcePushContent = '',
-                             $forcePushAll = false,
-                             $bid = '',
-                             $useYiDun = NULL,
-                             $markRead = 0,
-                             $checkFriend = false)
-    {
+                             $notRequireParams = []) {
 
         if ($from == '') {
             throw new YunXinArgExcetption('发送者id不能为空！');
@@ -101,33 +77,20 @@ class Chat extends Base
         }
 
         $body = is_array($body) ? json_encode($body) : $body;
-        $body = is_array($body) ? json_encode($body) : $body;
 
         if (strlen($body) > self::CHAT_MSG_BODY_LIMIT) {
             throw new YunXinArgExcetption('body内容超过限制！');
         }
 
+        $notRequireParams = $this->parseNotRequireParams($notRequireParams, parent::ACTION_CHAT);
         $parseData = [
             'from'             => (string)$from,
             'ope'              => $ope,
             'to'               => (string)$to,
             'type'             => $type,
-            'body'             => $body,
-            'antispam'         => is_bool($antiSpam) ? $this->bool2String($antiSpam) : $antiSpam,
-            'antispamCustom'   => is_array($antiSpamCustom) ? json_encode($antiSpamCustom) : $antiSpamCustom,
-            'option'           => is_array($option) ? json_encode($option) : $option,
-            'pushcontent'      => $pushContent,
-            'payload'          => is_array($payload) ? json_encode($payload) : $payload,
-            'ext'              => is_array($ext) ? json_encode($ext) : $ext,
-            'forcepushlist'    => is_array($forcePushList) ? json_encode($forcePushList) : $forcePushList,
-            'forcepushcontent' => $forcePushContent,
-            'forcepushall'     => is_bool($forcePushAll) ? $this->bool2String($forcePushAll) : $forcePushAll,
-            'bid'              => (string)$bid,
-            'useYidun'         => intval($useYiDun),
-            'markRead'         => intval($markRead),
-            'checkFriend'      => is_bool($checkFriend) ? $this->bool2String($checkFriend) : $checkFriend
+            'body'             => $body
         ];
-        $res = $this->sendRequest('msg/sendMsg.action', $parseData);
+        $res = $this->sendRequest('msg/sendMsg.action', array_merge($parseData, $notRequireParams));
         return $res;
     }
 
@@ -138,19 +101,7 @@ class Chat extends Base
      * @param $to
      * @param $ope
      * @param $text
-     * @param bool $antiSpam
-     * @param array $antiSpamCustom
-     * @param array $option
-     * @param string $pushContent
-     * @param array $payload
-     * @param array $ext
-     * @param array $forcePushList
-     * @param string $forcePushContent
-     * @param bool $forcePushAll
-     * @param string $bid
-     * @param null $useYiDun
-     * @param int $markRead
-     * @param bool $checkFriend
+     * @param array $notRequireParams
      * @return mixed
      * @throws YunXinArgExcetption
      * @throws YunXinBusinessException
@@ -162,19 +113,7 @@ class Chat extends Base
                                 $to,
                                 $ope,
                                 $text,
-                                $antiSpam = false,
-                                $antiSpamCustom = [],
-                                $option = '',
-                                $pushContent = '',
-                                $payload = '',
-                                $ext = [],
-                                $forcePushList = [],
-                                $forcePushContent = '',
-                                $forcePushAll = false,
-                                $bid = '',
-                                $useYiDun = NULL,
-                                $markRead = 0,
-                                $checkFriend = false)
+                                $notRequireParams = [])
     {
 
         $body = [
@@ -186,100 +125,68 @@ class Chat extends Base
             $ope,
             self::CHAT_TYPE_TEXT,
             $body,
-            $antiSpam,
-            $antiSpamCustom,
-            $option,
-            $pushContent,
-            $payload,
-            $ext,
-            $forcePushList,
-            $forcePushContent,
-            $forcePushAll,
-            $bid,
-            $useYiDun,
-            $markRead,
-            $checkFriend
+            $notRequireParams
         );
         return $res;
     }
 
+
+
     /**
      * 发送图片消息
-     * @param $accidFrom
+     * @param $from
      * @param $to
-     * @param $open
-     * @param $picName
-     * @param $picMD5
-     * @param $picUrl
-     * @param $picExt
-     * @param $picWidth
-     * @param $picHeight
-     * @param $picSize
-     * @param bool $antispam
-     * @param array $antispamCustom
-     * @param string $option
-     * @param string $pushContent
-     * @param array $payload
+     * @param $ope
+     * @param $url
+     * @param array $notRequireParams
+     * @param int $w
+     * @param int $h
+     * @param string $md5
      * @param string $ext
-     * @param array $forcePushList
-     * @param string $forcePushContent
-     * @param bool $forcePushAll
-     * @param string $bid
-     * @param null $useYidun
-     * @param int $markRead
-     * @param bool $checkFriend
+     * @param int $size
+     * @param string $picName
      * @return mixed
      * @throws YunXinArgExcetption
      * @throws YunXinBusinessException
      * @throws YunXinInnerException
      * @throws YunXinNetworkException
+     * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    public function sendPictureMsg($accidFrom, $to, $open,
-                                   $picName, $picMD5, $picUrl, $picExt, $picWidth, $picHeight, $picSize,
-                                   $antispam = false, array $antispamCustom = [],
-                                   $option = '', $pushContent = '', $payload = [], $ext = '', array $forcePushList = [], $forcePushContent = '',
-                                   $forcePushAll = false, $bid = '', $useYidun = NULL, $markRead = 0, $checkFriend = false)
+    public function sendPictureMsg($from,
+                                   $to,
+                                   $ope,
+                                   $url,
+                                   $notRequireParams = [],
+                                   $w = 0,
+                                   $h = 0,
+                                   $md5 = '',
+                                   $ext = '',
+                                   $size = 0,
+                                   $picName = '')
     {
-        $picWidth  = intval($picWidth);
-        $picHeight = intval($picHeight);
-        $picSize   = intval($picSize);
+        $images = getimagesize($url);
+        $body = [
+            'url'   => $url,
+            'ext'   => $ext ? $ext : parent::IMAGE_EXT_MAP[$images[2]],
+            'md5'   => $md5 ? $md5 : md5_file($url),
+            'w'     => $w > 0 ? intval($w) : $images[0],
+            'h'     => $h > 0 ? intval($h) : $images[1],
+            'size'  => $size > 0 ? intval($size) : strlen(file_get_contents($url))
+        ];
 
-        if (!$picWidth || $picHeight) {
-            throw new YunXinArgExcetption('图片宽度和高度不能为0！');
-        }
-        if (!$picSize) {
-            throw new YunXinArgExcetption('图片尺寸不能为0！');
+        if ($picName != '') {
+            $body['name'] = $picName;
         }
 
-        $body = json_encode([
-            "name" => $picName,   // 图片name
-            "md5" => $picMD5,    // 图片文件md5
-            "url" => $picUrl,    // 生成的url
-            "ext" => $picExt,    // 图片后缀
-            "w" => $picWidth,    // 宽
-            "h" => $picHeight,    // 高
-            "size" => $picSize    // 图片大小
-        ]);
+
 
         $res = $this->sendMsg(
-            $accidFrom,
+            $from,
             $to,
-            $open,
+            $ope,
             self::CHAT_TYPE_PICTURE,
-            $body,
-            $antispam,
-            $antispamCustom,
-            $option,
-            $pushContent,
-            $payload,
-            $ext,
-            $forcePushList,
-            $forcePushContent,
-            $forcePushAll,
-            $bid,
-            $useYidun,
-            $markRead,
-            $checkFriend
+            json_encode($body),
+            $notRequireParams
         );
         return $res;
     }

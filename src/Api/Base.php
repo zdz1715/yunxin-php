@@ -64,6 +64,46 @@ class Base
         self::CHAT_TYPE_CUSTOM,
     ];
 
+    const ACTION_CHAT = 1;
+    const ACTION_CHAT_ROOM = 2;
+
+    const NOT_REQUIRE_PARAMS = [
+        self::ACTION_CHAT => [
+            'antiSpam'         => false,
+            'antiSpamCustom'   => [],
+            'option'           => '',
+            'pushContent'      => '',
+            'payload'          => '',
+            'ext'              => [],
+            'forcePushList'    => [],
+            'forcePushContent' => '',
+            'forcePushAll'     => false,
+            'bid'              => '',
+            'useYiDun'         => NULL,
+            'markRead'         => 0,
+            'checkFriend'      => false
+        ]
+    ];
+
+    const IMAGE_EXT_MAP = [
+        1   => 'gif',
+        2   => 'jpg',
+        3   => 'png',
+        4   => 'swf',
+        5   => 'psd',
+        6   => 'bmp',
+        7   => 'tiff',
+        8   => 'tiff',
+        9   => 'jpc',
+        10  => 'jp2',
+        11  => 'jpx',
+        12  => 'jb2',
+        13  => 'swc',
+        14  => 'iff',
+        15  => 'wbmp',
+        16  => 'xbm'
+    ];
+
     /**
      * 网易云信分配的账号
      * @var string $appKey
@@ -189,5 +229,21 @@ class Base
     protected function bool2String($var) {
         return $var ? 'true' : 'false';
     }
+
+
+    protected function parseNotRequireParams($params, $action = self::ACTION_CHAT) {
+        $result = [];
+        $notRequireParams = self::NOT_REQUIRE_PARAMS[$action] ?? [];
+        if (empty($params) || empty($notRequireParams)) {
+            return [];
+        }
+        switch ($action) {
+            case self::ACTION_CHAT :
+                $result = array_intersect_key($params, $notRequireParams);
+                break;
+        }
+        return $result;
+    }
+
 
 }
