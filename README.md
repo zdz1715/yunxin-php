@@ -1,13 +1,13 @@
 # netease-im
 # 安装
-推荐使用composer：`composer require zdz/netease-im`
+推荐使用composer：`composer require zdz/yunxin-php`
 
 # 使用
 ### 创建实例
 ```
 $appKey = '****'; // 网易云信分配的账号
 $appSecrt = '****'; // 网易云信分配的密钥
-$entrance = new \NetEaseIm\Entrance($appKey, $appSecrt);
+$entrance = new \YunXin\Entrance($appKey, $appSecrt);
 ```
 
 ### 用户
