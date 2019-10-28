@@ -6,8 +6,8 @@
 ### 创建实例
 ```
 $appKey = '****'; // 网易云信分配的账号
-$appSecrt = '****'; // 网易云信分配的密钥
-$entrance = new \YunXin\Entrance($appKey, $appSecrt);
+$appSecret = '****'; // 网易云信分配的密钥
+$entrance = new \YunXin\Entrance($appKey, $appSecret);
 ```
 
 ### 用户

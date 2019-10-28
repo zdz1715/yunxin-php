@@ -45,7 +45,6 @@ class Base
     const ACCID_LEGAL_LENGTH = 32;
 
 
-
     const CHAT_TYPE_TEXT = 0;
     const CHAT_TYPE_PICTURE = 1;
     const CHAT_TYPE_AUDIO = 2;
@@ -55,6 +54,15 @@ class Base
     const CHAT_TYPE_TIPS = 10;
     const CHAT_TYPE_CUSTOM = 100;
 
+    const CHAT_TYPE_ALL = [
+        self::CHAT_TYPE_TEXT,
+        self::CHAT_TYPE_PICTURE,
+        self::CHAT_TYPE_AUDIO,
+        self::CHAT_TYPE_VIDEO,
+        self::CHAT_TYPE_POSITION,
+        self::CHAT_TYPE_FILE,
+        self::CHAT_TYPE_CUSTOM,
+    ];
 
     /**
      * 网易云信分配的账号
@@ -64,9 +72,9 @@ class Base
 
     /**
      * 网易云信分配的密钥
-     * @var string $appSecrt
+     * @var string $appSecret
      */
-    private $appSecrt;
+    private $appSecret;
 
     /**
      * 随机数（最大长度128个字符）
@@ -96,10 +104,10 @@ class Base
     private $timeout = 5;
 
 
-    public function __construct($appKey, $appSecrt)
+    public function __construct($appKey, $appSecret)
     {
         $this->appKey = $appKey;
-        $this->appSecrt = $appSecrt;
+        $this->appSecret = $appSecret;
     }
 
 
@@ -119,7 +127,7 @@ class Base
         }
         $this->curTime = (string)(time());    //当前时间戳，以秒为单位
 
-        $joinString = $this->appSecrt . $this->nonceStr . $this->curTime;
+        $joinString = $this->appSecret . $this->nonceStr . $this->curTime;
         $this->checkSum = sha1($joinString);
     }
 
@@ -150,6 +158,8 @@ class Base
             'base_uri' => $this->baseUrl,
             // You can set any number of default request options.
             'timeout'  => $this->timeout,
+            // use ssl verify
+            'verify'   => false
         ]);
         $response = $client->request('POST', $uri, [
             'headers' => [
@@ -179,4 +189,5 @@ class Base
     protected function bool2String($var) {
         return $var ? 'true' : 'false';
     }
+
 }

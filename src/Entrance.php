@@ -21,16 +21,16 @@ class Entrance {
 
     /**
      * 网易云信分配的密钥
-     * @var string $appSecrt
+     * @var string $appSecret
      */
-    private $appSecrt;
+    private $appSecret;
 
     private $instances = [];
 
-    public function __construct($appKey, $appSecrt)
+    public function __construct($appKey, $appSecret)
     {
         $this->appKey = $appKey;
-        $this->appSecrt = $appSecrt;
+        $this->appSecret = $appSecret;
     }
 
     /**
@@ -39,7 +39,7 @@ class Entrance {
     public function user() {
         $key = 'user';
         if (!array_key_exists($key, $this->instances)) {
-            $user = new User($this->appKey, $this->appSecrt);
+            $user = new User($this->appKey, $this->appSecret);
             $this->instances[$key] = $user;
         }
         return $this->instances[$key];
@@ -52,7 +52,7 @@ class Entrance {
     public function chat() {
         $key = 'chat';
         if (!array_key_exists($key, $this->instances)) {
-            $chat = new Chat($this->appKey, $this->appSecrt);
+            $chat = new Chat($this->appKey, $this->appSecret);
             $this->instances[$key] = $chat;
         }
         return $this->instances[$key];
@@ -65,7 +65,7 @@ class Entrance {
     public function chatRoom() {
         $key = 'ChatRoom';
         if (!array_key_exists($key, $this->instances)) {
-            $chatRoom = new ChatRoom($this->appKey, $this->appSecrt);
+            $chatRoom = new ChatRoom($this->appKey, $this->appSecret);
             $this->instances[$key] = $chatRoom;
         }
         return $this->instances[$key];
@@ -80,6 +80,6 @@ class Entrance {
      * @return bool
      */
     public function isLegalChecksum($body, $curTime, $checksumPost) {
-        return sha1($this->appSecrt . md5($body) . $curTime) === $checksumPost;
+        return sha1($this->appSecret . md5($body) . $curTime) === $checksumPost;
     }
 }

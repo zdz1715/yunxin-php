@@ -1,4 +1,5 @@
 <?php
+
 namespace YunXin\Api;
 
 
@@ -26,24 +27,25 @@ class Chat extends Base
     const RECALL_TYPE_ONE_TO_ONE = 7;
     const RECALL_TYPE_ONE_TO_GROUP = 8;
 
+
     /**
-     * 发送普通消息
-     * @param string $accidFrom
-     * @param string $accidTo
-     * @param int $open 0：点对点个人消息，1：群消息（高级群），其他返回414
-     * @param int $type
-     * @param string $body 最大长度5000字符，为一个JSON串
-     * @param bool $antispam
-     * @param array $antispamCustom
-     * @param string $option
+     * 发送消息
+     * @param $from
+     * @param $to
+     * @param $ope
+     * @param $type
+     * @param $body
+     * @param bool $antiSpam
+     * @param array $antiSpamCustom
+     * @param array $option
      * @param string $pushContent
      * @param array $payload
-     * @param string $ext
+     * @param array $ext
      * @param array $forcePushList
      * @param string $forcePushContent
      * @param bool $forcePushAll
      * @param string $bid
-     * @param null $useYidun
+     * @param null $useYiDun
      * @param int $markRead
      * @param bool $checkFriend
      * @return mixed
@@ -51,94 +53,141 @@ class Chat extends Base
      * @throws YunXinBusinessException
      * @throws YunXinInnerException
      * @throws YunXinNetworkException
+     * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    private function sendMsg($accidFrom, $accidTo, $open, $type, $body, $antispam = false, array $antispamCustom = [],
-                             $option = '', $pushContent = '', $payload = [], $ext = '', array $forcePushList = [], $forcePushContent = '',
-                             $forcePushAll = false, $bid = '', $useYidun = NULL, $markRead = 0, $checkFriend = false) {
-        if (!$accidFrom || !is_string($accidFrom)) {
+    private function sendMsg($from,
+                             $to,
+                             $ope,
+                             $type,
+                             $body,
+                             $antiSpam = false,
+                             $antiSpamCustom = [],
+                             $option = '',
+                             $pushContent = '',
+                             $payload = '',
+                             $ext = [],
+                             $forcePushList = [],
+                             $forcePushContent = '',
+                             $forcePushAll = false,
+                             $bid = '',
+                             $useYiDun = NULL,
+                             $markRead = 0,
+                             $checkFriend = false)
+    {
+
+        if ($from == '') {
             throw new YunXinArgExcetption('发送者id不能为空！');
         }
-        if (strlen($accidFrom) > self::ACCID_LEGAL_LENGTH) {
+        if (strlen($from) > self::ACCID_LEGAL_LENGTH) {
             throw new YunXinArgExcetption('发送者id超过限制！');
         }
-        if (!$accidTo || !is_string($accidTo)) {
+        if ($to == '') {
             throw new YunXinArgExcetption('接受者id不能为空！');
         }
-        if (strlen($accidTo) > self::ACCID_LEGAL_LENGTH) {
+        if (strlen($to) > self::ACCID_LEGAL_LENGTH) {
             throw new YunXinArgExcetption('接受者id超过限制！');
         }
+
+        $ope  = intval($ope);
+        $type = intval($type);
+
+        if (!in_array($type, self::CHAT_TYPE_ALL)) {
+            throw new YunXinArgExcetption('type参数不合法');
+        }
+
+        $openLegalArr = [self::CHAT_ONT_TO_ONE, self::CHAT_ONT_TO_GROUP];
+        if (!in_array($ope, $openLegalArr)) {
+            throw new YunXinArgExcetption('ope参数不合法');
+        }
+
+        $body = is_array($body) ? json_encode($body) : $body;
+        $body = is_array($body) ? json_encode($body) : $body;
 
         if (strlen($body) > self::CHAT_MSG_BODY_LIMIT) {
             throw new YunXinArgExcetption('body内容超过限制！');
         }
-        $openLegalArr = [self::CHAT_ONT_TO_ONE, self::CHAT_ONT_TO_GROUP];
-        if (!in_array($open, $openLegalArr)) {
-            throw new YunXinArgExcetption('send msg open参数不合法');
-        }
 
-        $res = $this->sendRequest('msg/sendMsg.action', [
-            'from' => $accidFrom,
-            'ope' => $open,
-            'to' => $accidTo,
-            'type' => $type,
-            'body' => $body,
-            'antispam' => $antispam,
-            'antispamCustom' => $antispamCustom,
-            'option' => $option,
-            'pushcontent' => $pushContent,
-            'payload' => json_encode($payload),
-            'ext' => $ext,
-            'forcepushlist' => json_encode($forcePushList),
+        $parseData = [
+            'from'             => (string)$from,
+            'ope'              => $ope,
+            'to'               => (string)$to,
+            'type'             => $type,
+            'body'             => $body,
+            'antispam'         => is_bool($antiSpam) ? $this->bool2String($antiSpam) : $antiSpam,
+            'antispamCustom'   => is_array($antiSpamCustom) ? json_encode($antiSpamCustom) : $antiSpamCustom,
+            'option'           => is_array($option) ? json_encode($option) : $option,
+            'pushcontent'      => $pushContent,
+            'payload'          => is_array($payload) ? json_encode($payload) : $payload,
+            'ext'              => is_array($ext) ? json_encode($ext) : $ext,
+            'forcepushlist'    => is_array($forcePushList) ? json_encode($forcePushList) : $forcePushList,
             'forcepushcontent' => $forcePushContent,
-            'forcepushall' => $forcePushAll,
-            'bid' => $bid,
-            'useYidun' => $useYidun,
-            'markRead' => $markRead,
-            'checkFriend' => $this->bool2String($checkFriend),
-        ]);
+            'forcepushall'     => is_bool($forcePushAll) ? $this->bool2String($forcePushAll) : $forcePushAll,
+            'bid'              => (string)$bid,
+            'useYidun'         => intval($useYiDun),
+            'markRead'         => intval($markRead),
+            'checkFriend'      => is_bool($checkFriend) ? $this->bool2String($checkFriend) : $checkFriend
+        ];
+        $res = $this->sendRequest('msg/sendMsg.action', $parseData);
         return $res;
     }
 
+
     /**
      * 发送文本消息
-     * @param $accidFrom
+     * @param $from
      * @param $to
-     * @param int $open 0：点对点个人消息，1：群消息（高级群），其他返回414
+     * @param $ope
      * @param $text
-     * @param bool $antispam
-     * @param array $antispamCustom
-     * @param string $option
+     * @param bool $antiSpam
+     * @param array $antiSpamCustom
+     * @param array $option
      * @param string $pushContent
      * @param array $payload
-     * @param string $ext
+     * @param array $ext
      * @param array $forcePushList
      * @param string $forcePushContent
      * @param bool $forcePushAll
      * @param string $bid
-     * @param null $useYidun
+     * @param null $useYiDun
      * @param int $markRead
      * @param bool $checkFriend
      * @return mixed
      * @throws YunXinArgExcetption
      * @throws YunXinBusinessException
-     * @throws YunXinNetworkException
      * @throws YunXinInnerException
+     * @throws YunXinNetworkException
+     * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    public function sendTextMsg($accidFrom, $to, $open, $text, $antispam = false, array $antispamCustom = [],
-                                $option = '', $pushContent = '', $payload = [], $ext = '', array $forcePushList = [], $forcePushContent = '',
-                                $forcePushAll = false, $bid = '', $useYidun = NULL, $markRead = 0, $checkFriend = false) {
-        $body = json_encode([
-            'msg' => $text
-        ]);
+    public function sendTextMsg($from,
+                                $to,
+                                $ope,
+                                $text,
+                                $antiSpam = false,
+                                $antiSpamCustom = [],
+                                $option = '',
+                                $pushContent = '',
+                                $payload = '',
+                                $ext = [],
+                                $forcePushList = [],
+                                $forcePushContent = '',
+                                $forcePushAll = false,
+                                $bid = '',
+                                $useYiDun = NULL,
+                                $markRead = 0,
+                                $checkFriend = false)
+    {
 
-        $res = $this->sendMsg(
-            $accidFrom,
+        $body = [
+            'msg' => $text
+        ];
+        $res  = $this->sendMsg(
+            $from,
             $to,
-            $open,
+            $ope,
             self::CHAT_TYPE_TEXT,
             $body,
-            $antispam,
-            $antispamCustom,
+            $antiSpam,
+            $antiSpamCustom,
             $option,
             $pushContent,
             $payload,
@@ -147,7 +196,7 @@ class Chat extends Base
             $forcePushContent,
             $forcePushAll,
             $bid,
-            $useYidun,
+            $useYiDun,
             $markRead,
             $checkFriend
         );
@@ -189,10 +238,11 @@ class Chat extends Base
                                    $picName, $picMD5, $picUrl, $picExt, $picWidth, $picHeight, $picSize,
                                    $antispam = false, array $antispamCustom = [],
                                    $option = '', $pushContent = '', $payload = [], $ext = '', array $forcePushList = [], $forcePushContent = '',
-                                   $forcePushAll = false, $bid = '', $useYidun = NULL, $markRead = 0, $checkFriend = false) {
-        $picWidth = intval($picWidth);
+                                   $forcePushAll = false, $bid = '', $useYidun = NULL, $markRead = 0, $checkFriend = false)
+    {
+        $picWidth  = intval($picWidth);
         $picHeight = intval($picHeight);
-        $picSize = intval($picSize);
+        $picSize   = intval($picSize);
 
         if (!$picWidth || $picHeight) {
             throw new YunXinArgExcetption('图片宽度和高度不能为0！');
@@ -267,8 +317,9 @@ class Chat extends Base
                                  $audioDur, $audioMD5, $audioUrl, $audioExt, $audioSize,
                                  $antispam = false, array $antispamCustom = [],
                                  $option = '', $pushContent = '', $payload = [], $ext = '', array $forcePushList = [], $forcePushContent = '',
-                                 $forcePushAll = false, $bid = '', $useYidun = NULL, $markRead = 0, $checkFriend = false) {
-        $audioDur = intval($audioDur);
+                                 $forcePushAll = false, $bid = '', $useYidun = NULL, $markRead = 0, $checkFriend = false)
+    {
+        $audioDur  = intval($audioDur);
         $audioSize = intval($audioSize);
 
         if (!$audioDur) {
@@ -347,11 +398,12 @@ class Chat extends Base
                                  $videoDur, $videoMD5, $videoUrl, $videoExt, $videoWidth, $videoHeight, $videoSize,
                                  $antispam = false, array $antispamCustom = [],
                                  $option = '', $pushContent = '', $payload = [], $ext = '', array $forcePushList = [], $forcePushContent = '',
-                                 $forcePushAll = false, $bid = '', $useYidun = NULL, $markRead = 0, $checkFriend = false) {
-        $videoDur = intval($videoDur);
-        $videoWidth = intval($videoWidth);
+                                 $forcePushAll = false, $bid = '', $useYidun = NULL, $markRead = 0, $checkFriend = false)
+    {
+        $videoDur    = intval($videoDur);
+        $videoWidth  = intval($videoWidth);
         $videoHeight = intval($videoHeight);
-        $videoSize = intval($videoSize);
+        $videoSize   = intval($videoSize);
 
         if (!$videoDur) {
             throw new YunXinArgExcetption('视频时长不能为0！');
@@ -427,7 +479,8 @@ class Chat extends Base
                                     $title, $lng, $lat,
                                     $antispam = false, array $antispamCustom = [],
                                     $option = '', $pushContent = '', $payload = [], $ext = '', array $forcePushList = [], $forcePushContent = '',
-                                    $forcePushAll = false, $bid = '', $useYidun = NULL, $markRead = 0, $checkFriend = false) {
+                                    $forcePushAll = false, $bid = '', $useYidun = NULL, $markRead = 0, $checkFriend = false)
+    {
 
         $body = json_encode([
             'title' => $title,
@@ -492,7 +545,8 @@ class Chat extends Base
                                 $fileName, $fileMD5, $fileUrl, $fileExt, $fileSize,
                                 $antispam = false, array $antispamCustom = [],
                                 $option = '', $pushContent = '', $payload = [], $ext = '', array $forcePushList = [], $forcePushContent = '',
-                                $forcePushAll = false, $bid = '', $useYidun = NULL, $markRead = 0, $checkFriend = false) {
+                                $forcePushAll = false, $bid = '', $useYidun = NULL, $markRead = 0, $checkFriend = false)
+    {
         $fileSize = intval($fileSize);
 
         if (!$fileSize) {
@@ -559,7 +613,8 @@ class Chat extends Base
                                   array $arr,
                                   $antispam, array $antispamCustom = [],
                                   $option = '', $pushContent = '', $payload = [], $ext = '', array $forcePushList = [], $forcePushContent = '',
-                                  $forcePushAll = false, $bid = '', $useYidun = NULL, $markRead = 0, $checkFriend = false) {
+                                  $forcePushAll = false, $bid = '', $useYidun = NULL, $markRead = 0, $checkFriend = false)
+    {
 
 
         $res = $this->sendMsg(
@@ -606,7 +661,8 @@ class Chat extends Base
      */
     private function sendBatchMsg($accidFrom, array $accidsTo, $type, $body,
                                   $option = '', $pushContent = '', $payload = [], $ext = '',
-                                  $bid = '', $useYidun = NULL, $returnMsgid = FALSE) {
+                                  $bid = '', $useYidun = NULL, $returnMsgid = FALSE)
+    {
         if (!$accidFrom || !is_string($accidFrom)) {
             throw new YunXinArgExcetption('发送者id不能为空！');
         }
@@ -659,7 +715,8 @@ class Chat extends Base
      */
     public function sendTextBatchMsg($accidFrom, array $accidsTo, $text,
                                      $option = '', $pushContent = '', $payload = [], $ext = '',
-                                     $bid = '', $useYidun = NULL, $returnMsgid = FALSE) {
+                                     $bid = '', $useYidun = NULL, $returnMsgid = FALSE)
+    {
         $body = json_encode([
             'msg' => $text
         ]);
@@ -707,10 +764,11 @@ class Chat extends Base
     public function sendPictureBatchMsg($accidFrom, array $accidsTo,
                                         $picName, $picMD5, $picUrl, $picExt, $picWidth, $picHeight, $picSize,
                                         $option = '', $pushContent = '', $payload = [], $ext = '',
-                                        $bid = '', $useYidun = NULL, $returnMsgid = FALSE) {
-        $picWidth = intval($picWidth);
+                                        $bid = '', $useYidun = NULL, $returnMsgid = FALSE)
+    {
+        $picWidth  = intval($picWidth);
         $picHeight = intval($picHeight);
-        $picSize = intval($picSize);
+        $picSize   = intval($picSize);
 
         if (!$picWidth || $picHeight) {
             throw new YunXinArgExcetption('图片宽度和高度不能为0！');
@@ -770,8 +828,9 @@ class Chat extends Base
     public function sendAudioBatchMsg($accidFrom, array $accidsTo,
                                       $audioDur, $audioMD5, $audioUrl, $audioExt, $audioSize,
                                       $option = '', $pushContent = '', $payload = [], $ext = '',
-                                      $bid = '', $useYidun = NULL, $returnMsgid = FALSE) {
-        $audioDur = intval($audioDur);
+                                      $bid = '', $useYidun = NULL, $returnMsgid = FALSE)
+    {
+        $audioDur  = intval($audioDur);
         $audioSize = intval($audioSize);
 
         if (!$audioDur) {
@@ -835,11 +894,12 @@ class Chat extends Base
     public function sendVideoBatchMsg($accidFrom, array $accidsTo,
                                       $videoDur, $videoMD5, $videoUrl, $videoExt, $videoWidth, $videoHeight, $videoSize,
                                       $option = '', $pushContent = '', $payload = [], $ext = '',
-                                      $bid = '', $useYidun = NULL, $returnMsgid = FALSE) {
-        $videoDur = intval($videoDur);
-        $videoWidth = intval($videoWidth);
+                                      $bid = '', $useYidun = NULL, $returnMsgid = FALSE)
+    {
+        $videoDur    = intval($videoDur);
+        $videoWidth  = intval($videoWidth);
         $videoHeight = intval($videoHeight);
-        $videoSize = intval($videoSize);
+        $videoSize   = intval($videoSize);
 
         if (!$videoDur) {
             throw new YunXinArgExcetption('视频时长不能为0！');
@@ -900,7 +960,8 @@ class Chat extends Base
     public function sendPositionBatchMsg($accidFrom, array $accidsTo,
                                          $title, $lng, $lat,
                                          $option = '', $pushContent = '', $payload = [], $ext = '',
-                                         $bid = '', $useYidun = NULL, $returnMsgid = FALSE) {
+                                         $bid = '', $useYidun = NULL, $returnMsgid = FALSE)
+    {
 
         $body = json_encode([
             'title' => $title,
@@ -949,7 +1010,8 @@ class Chat extends Base
     public function sendFileBatchMsg($accidFrom, array $accidsTo,
                                      $fileName, $fileMD5, $fileUrl, $fileExt, $fileSize,
                                      $option = '', $pushContent = '', $payload = [], $ext = '',
-                                     $bid = '', $useYidun = NULL, $returnMsgid = FALSE) {
+                                     $bid = '', $useYidun = NULL, $returnMsgid = FALSE)
+    {
         $fileSize = intval($fileSize);
 
         if (!$fileSize) {
@@ -1001,7 +1063,8 @@ class Chat extends Base
     public function sendCustomBatchMsg($accidFrom, array $accidsTo,
                                        array $arr,
                                        $option = '', $pushContent = '', $payload = [], $ext = '',
-                                       $bid = '', $useYidun = NULL, $returnMsgid = FALSE) {
+                                       $bid = '', $useYidun = NULL, $returnMsgid = FALSE)
+    {
 
         $res = $this->sendBatchMsg(
             $accidFrom,
@@ -1031,10 +1094,11 @@ class Chat extends Base
      * @throws YunXinArgExcetption
      */
     private function verifyAttachMsg($from, $msgType,
-                                     $attachStr, $pushContent, $payload, $save) {
-        $msgLegalTypes = [self::CHAT_ONT_TO_ONE, self::CHAT_ONT_TO_GROUP];
+                                     $attachStr, $pushContent, $payload, $save)
+    {
+        $msgLegalTypes  = [self::CHAT_ONT_TO_ONE, self::CHAT_ONT_TO_GROUP];
         $saveLegalTypes = [1, 2];
-        $msgType = intval($msgType);
+        $msgType        = intval($msgType);
 
         if (empty($from)) {
             throw new YunXinArgExcetption('发送者id不能为空！');
@@ -1082,7 +1146,8 @@ class Chat extends Base
      */
     public function sendAttachMsg($from, $msgType, $to,
                                   array $attach,
-                                  $pushContent = '', $payload = [], $sound = '', $save = 2, $option = '') {
+                                  $pushContent = '', $payload = [], $sound = '', $save = 2, $option = '')
+    {
         $attachStr = '';
         if ($attach) {
             $attachStr = json_encode($attach);
@@ -1133,7 +1198,8 @@ class Chat extends Base
      */
     public function sendAttachBatchMsg($from, array $toAccids,
                                        array $attach,
-                                       $pushContent = '', $payload = [], $sound = '', $save = 2, $option = '') {
+                                       $pushContent = '', $payload = [], $sound = '', $save = 2, $option = '')
+    {
         $attachStr = '';
         if ($attach) {
             $attachStr = json_encode($attach);
@@ -1174,7 +1240,8 @@ class Chat extends Base
      * @throws YunXinInnerException
      * @throws YunXinNetworkException
      */
-    public function upload($content, $type, $isHttps = false, $expireSec = NULL, $tag = '') {
+    public function upload($content, $type, $isHttps = false, $expireSec = NULL, $tag = '')
+    {
         if ($expireSec) {
             $expireSec = intval($expireSec);
         }
@@ -1213,9 +1280,10 @@ class Chat extends Base
      * @throws YunXinNetworkException
      */
     public function recallMsg($deleteMsgid, $timetag, $type, $from, $to, $msg,
-                              $ignoreTime, $pushContent, $payload) {
+                              $ignoreTime, $pushContent, $payload)
+    {
         $typesLegal = [self::RECALL_TYPE_ONE_TO_ONE, self::RECALL_TYPE_ONE_TO_GROUP];
-        $type = intval($type);
+        $type       = intval($type);
 
         if (empty($deleteMsgid)) {
             throw new YunXinArgExcetption('撤回msg id不能为空！');
@@ -1257,7 +1325,8 @@ class Chat extends Base
      * @throws YunXinInnerException
      * @throws YunXinNetworkException
      */
-    public function broadcastMsg($body, $from, $isOffline = false, $ttl, array $targetOs) {
+    public function broadcastMsg($body, $from, $isOffline = false, $ttl, array $targetOs)
+    {
         if (empty($body)) {
             throw new YunXinArgExcetption('body不能为空！');
         }
