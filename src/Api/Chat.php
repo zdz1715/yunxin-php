@@ -44,7 +44,7 @@ class Chat extends Base
      * @throws YunXinNetworkException
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    private function sendMsg($from,
+    public function sendMsg($from,
                              $to,
                              $ope,
                              $type,
@@ -190,6 +190,7 @@ class Chat extends Base
         );
         return $res;
     }
+
 
     /**
      * 发送语音消息
@@ -491,61 +492,7 @@ class Chat extends Base
         return $res;
     }
 
-    /**
-     * 发送自定义消息
-     * @param string $accidFrom
-     * @param string $accidTo
-     * @param $open
-     * @param array $arr
-     * @param $antispam
-     * @param array $antispamCustom
-     * @param string $option
-     * @param string $pushContent
-     * @param array $payload
-     * @param string $ext
-     * @param array $forcePushList
-     * @param string $forcePushContent
-     * @param bool $forcePushAll
-     * @param string $bid
-     * @param null $useYidun
-     * @param int $markRead
-     * @param bool $checkFriend
-     * @return mixed
-     * @throws YunXinArgExcetption
-     * @throws YunXinBusinessException
-     * @throws YunXinInnerException
-     * @throws YunXinNetworkException
-     */
-    public function sendCustomMsg($accidFrom, $accidTo, $open,
-                                  array $arr,
-                                  $antispam, array $antispamCustom = [],
-                                  $option = '', $pushContent = '', $payload = [], $ext = '', array $forcePushList = [], $forcePushContent = '',
-                                  $forcePushAll = false, $bid = '', $useYidun = NULL, $markRead = 0, $checkFriend = false)
-    {
 
-
-        $res = $this->sendMsg(
-            $accidFrom,
-            $accidTo,
-            $open,
-            self::CHAT_TYPE_CUSTOM,
-            json_encode($arr),
-            $antispam,
-            $antispamCustom,
-            $option,
-            $pushContent,
-            $payload,
-            $ext,
-            $forcePushList,
-            $forcePushContent,
-            $forcePushAll,
-            $bid,
-            $useYidun,
-            $markRead,
-            $checkFriend
-        );
-        return $res;
-    }
 
     /**
      * 批量发送点对点普通消息

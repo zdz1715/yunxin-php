@@ -15,6 +15,19 @@ $appSecret = '';
 
 $yunXin = new \YunXin\Entrance($appKey, $appSecret);
 
+// 发送自定义信息
+
+try {
+    $sendResult = $yunXin->chat()->sendMsg('1', '2', 0, '', '',
+        [
+            'ext'   => json_encode([
+
+            ])
+        ]);
+} catch (\Exception $e) {
+    echo '发送消息失败：'. $e->getMessage();
+}
+
 // 发送文本消息
 try {
     $sendResult = $yunXin->chat()->sendTextMsg('1', '2', 0, '你好呀', [
