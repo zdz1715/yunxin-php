@@ -161,7 +161,7 @@ class Base
         //此部分生成随机字符串
         $hexDigits = self::HEX_DIGITS;
         $digitsLen = strlen($hexDigits);
-        $this->nonceStr;
+        $this->nonceStr = '';
         for ($i = 0; $i < 128; $i++) {
             $this->nonceStr .= $hexDigits[rand(0, $digitsLen - 1)];
         }
